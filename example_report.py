@@ -1,13 +1,7 @@
 #!/usr/bin/env python3
 
-from pathlib import Path
-import sys
-
-if __package__ is None or __package__ == "":
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
+from dataloader import GeoLoadInput, load_data, print_sample_summary, save_sample_report_html
 from dataloader.adapters import firms as firms_mod
-from dataloader_v5 import GeoLoadInput, load_data, print_sample_summary, save_sample_report_html
 
 
 def main() -> None:
@@ -27,7 +21,7 @@ def main() -> None:
     )
     sample = load_data(req)
     print_sample_summary(sample)
-    report_path = save_sample_report_html(sample, "/home/yangshuang/output/sample_v5_report.html")
+    report_path = save_sample_report_html(sample, "/home/yangshuang/output/sample_report.html")
     print("report saved:", report_path)
 
 

@@ -1,45 +1,20 @@
 # Rai Dataloader H5
 
-Unified geospatial dataloader prototypes for multi-source hazard and environmental data.
+Unified geospatial dataloader for multi-source hazard and environmental data.
 
-This repository contains several iterations of the same pipeline:
+## What is included
 
-- `dataloader/`: initial unified loader
-- `dataloader_v2/`: synthetic time support and warning system
-- `dataloader_v3/`: simplified request object, HDF5 export, PyTorch handoff
-- `dataloader_v4/`: visualization and diagnostic utilities
-- `dataloader_v5/`: reporting and publish-readiness checks
+- `dataloader/`: single maintained package
+- `example_with_synthetic.py`: minimal synthetic-time example
+- `example_no_synthetic.py`: missing-data warning example
+- `example_with_synthetic_h5.py`: HDF5 export and PyTorch handoff
+- `example_report.py`: structured sample summary
+- `verify_publish_readiness.py`: per-source validation script
 
-## Data policy
-
-This repository contains code only. Local datasets are not included.
-
-Expected local data roots are documented in the versioned READMEs and examples, for example:
-
-- `firmsFL14-25/`
-- `NOAA-NWMflood/`
-- `era5/`
-- `merra2/`
-- `MTBS/`
-- `USDALandfire/`
-
-## Verified local status
-
-The latest local verification was run with:
-
-- `FIRMS`: load OK, synthetic OK, HDF5 round-trip OK
-- `NOAA`: load OK, synthetic OK, HDF5 round-trip OK
-- `ERA5`: load OK, synthetic OK, HDF5 round-trip OK
-- `LANDFIRE`: load OK, synthetic OK, HDF5 round-trip OK
-- `MTBS` as label source: load OK, synthetic alignment OK, HDF5 round-trip OK
-- `MERRA2`: adapter exists, but not locally verified in the current workspace because source files were absent
-
-## Quick start
-
-Typical workflow:
+## Core API
 
 ```python
-from dataloader_v3 import GeoLoadInput, load_data, save_sample_h5, load_sample_h5, to_torch_batch
+from dataloader import GeoLoadInput, load_data
 
 req = GeoLoadInput(
     data_sources=["FIRMS", "NOAA", "ERA5"],
@@ -53,13 +28,35 @@ req = GeoLoadInput(
 )
 
 sample = load_data(req)
+```
+
+`sample.x` has shape `(T, C, H, W)`, `sample.y` has shape `(T, H, W)`.
+
+## HDF5 workflow
+
+```python
+from dataloader import load_sample_h5, save_sample_h5, to_torch_batch
+
 save_sample_h5(sample, "sample.h5")
 sample2 = load_sample_h5("sample.h5")
 x_t, y_t, meta = to_torch_batch(sample2)
 ```
+
+## Verified local support
+
+- `FIRMS`: load OK, synthetic OK, HDF5 round-trip OK
+- `NOAA`: load OK, synthetic OK, HDF5 round-trip OK
+- `ERA5`: load OK, synthetic OK, HDF5 round-trip OK
+- `LANDFIRE`: load OK, synthetic OK, HDF5 round-trip OK
+- `MTBS` as label source: load OK, synthetic alignment OK, HDF5 round-trip OK
+- `MERRA2`: adapter included, but local source files were absent during verification
 
 ## Install
 
 ```bash
 pip install -r requirements.txt
 ```
+
+## Data policy
+
+This repository contains code only. Local datasets are not included.
