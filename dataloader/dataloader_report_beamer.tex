@@ -1,0 +1,169 @@
+\documentclass{beamer}
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\title{Unified Wildfire Dataloader Pipeline}
+\author{Yangshuang Project Update}
+\date{\today}
+
+\lstdefinestyle{pycode}{
+  language=Python,
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{teal},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single
+}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Goal}
+Build a single dataloader module that:
+\begin{itemize}
+  \item Reads heterogeneous local datasets (FIRMS, MTBS FOD, ERA5, NOAA, LANDFIRE, MERRA2)
+  \item Normalizes them into one spatial-temporal format
+  \item Returns model-ready tensors with a simple API
+  \item Keeps raw data untouched (read-only source, optional processed cache)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Current API}
+\textbf{Primary entrypoint:} \texttt{load\_data(...)}
+\begin{itemize}
+  \item \texttt{data}: selected sources, e.g. \texttt{["MTBS","FIRMS"]}
+  \item \texttt{date\_range}: \texttt{("YYYY-MM-DD","YYYY-MM-DD")}
+  \item \texttt{bbox}: \texttt{(min lon, min lat, max lon, max lat)}
+  \item \texttt{resolution}: target grid resolution in degrees
+  \item optional label controls: \texttt{label\_map}, \texttt{label\_rule}
+\end{itemize}
+\vspace{0.3em}
+\textbf{Return object:}
+\begin{itemize}
+  \item \texttt{x}: feature tensor \texttt{[T, C, H, W]}
+  \item \texttt{y}: label tensor \texttt{[T, H, W]} (or empty/zero placeholder if unavailable)
+  \item \texttt{meta}: channels and config metadata
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Example 1: MTBS Label Query (Code)}
+\begin{lstlisting}[style=pycode]
+from dataloader.adapters.mtbs_fod import MTBSFODAdapter
+from dataloader.config import LabelConfig, TimeConfig
+
+bbox = (-87.8, 24.0, -79.8, 31.5)
+adapter = MTBSFODAdapter(label_map=LabelConfig().incid_type_map)
+df = adapter.load_points(
+    "/home/yangshuang",
+    TimeConfig(start_date="2022-01-01", end_date="2023-12-31")
+)
+fl = df[
+    (df["longitude"].between(bbox[0], bbox[2])) &
+    (df["latitude"].between(bbox[1], bbox[3]))
+]
+print("rows:", len(fl))
+print("label_counts:", fl["label"].value_counts().to_dict())
+print(fl.head().to_string(index=False))
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Example 1: MTBS Label Query (Output)}
+\begin{lstlisting}[style=pycode]
+rows: 110
+label_counts: {2: 85, 1: 23, 0: 2}
+ latitude  longitude       date  label
+25.405119 -80.716048 2022-01-31      2
+25.768211 -80.432921 2022-03-29      1
+26.293827 -81.058581 2022-03-28      1
+25.407506 -80.480635 2022-04-26      1
+26.290969 -80.521617 2022-08-16      1
+\end{lstlisting}
+\vspace{0.3em}
+Encoding used in this run:
+\begin{itemize}
+  \item 0 = unknown
+  \item 1 = wildfire
+  \item 2 = prescribed fire
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Example 2: End-to-End \texttt{load\_data} (Code)}
+\begin{lstlisting}[style=pycode]
+from dataloader import load_data
+from dataloader.adapters import firms as firms_mod
+
+# Fast local run: limit FIRMS to Florida CSVs
+firms_mod.FIRMSAdapter.CSV_PATTERNS = ["firmsFL14-25/*.csv"]
+firms_mod.FIRMSAdapter.JSON_PATTERNS = []
+
+sample = load_data(
+    data=["MTBS", "FIRMS"],
+    date_range=("2023-01-01", "2023-01-31"),
+    bbox=(-81.0, 26.0, -80.0, 27.0),
+    resolution=0.1,
+    root_dir="/home/yangshuang",
+)
+print("x shape:", sample.x.shape)
+print("y shape:", sample.y.shape)
+print("channels:", sample.meta.get("channels"))
+print("x nonzero:", int((sample.x != 0).sum()))
+print("y nonzero:", int((sample.y != 0).sum()) if sample.y.size else 0)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Example 2: End-to-End \texttt{load\_data} (Output)}
+\begin{lstlisting}[style=pycode]
+x shape: (29, 2, 11, 10)
+y shape: (0, 11, 10)
+channels: ['count', 'frp']
+x nonzero: 282
+y nonzero: 0
+\end{lstlisting}
+\vspace{0.3em}
+Interpretation:
+\begin{itemize}
+  \item \texttt{x} contains FIRMS features (count, frp)
+  \item \texttt{y} is empty here because no MTBS labels matched this specific
+        date-range + bbox alignment
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Status and Next Steps}
+\textbf{Implemented}
+\begin{itemize}
+  \item Unified API and schema
+  \item MTBS FOD label encoding
+  \item FIRMS feature rasterization
+  \item Adapter scaffolding and first-pass loading for ERA5/NOAA/LANDFIRE/MERRA2
+\end{itemize}
+\textbf{Planned improvements}
+\begin{itemize}
+  \item More robust multi-source time alignment strategy
+  \item Configurable source filtering in API (no monkey patching)
+  \item Stronger validation and source-level diagnostics
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Takeaway}
+The dataloader now provides:
+\begin{itemize}
+  \item A practical single entrypoint for loading wildfire-related data
+  \item Reproducible label extraction from MTBS FOD
+  \item Model-ready gridded tensors from local heterogeneous sources
+\end{itemize}
+\vspace{0.5em}
+This gives a concrete foundation for training/inference pipelines and future
+feature expansion.
+\end{frame}
+
+\end{document}

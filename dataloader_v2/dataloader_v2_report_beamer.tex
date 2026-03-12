@@ -1,0 +1,154 @@
+\documentclass{beamer}
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\title{Dataloader V2: Current Capabilities and Results}
+\author{Project Update}
+\date{\today}
+
+\lstdefinestyle{pycode}{
+  language=Python,
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{teal},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single
+}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Scope}
+\textbf{Goal:} Unified local dataloader with configurable feature sources, label source, and optional synthetic temporal expansion.
+\vspace{0.4em}
+\begin{itemize}
+  \item Output contract: \texttt{x [T,C,H,W]}, \texttt{y [T,H,W]}, \texttt{meta}
+  \item Feature sources (\texttt{x}): FIRMS, ERA5, NOAA, LANDFIRE, MERRA2 (if available)
+  \item Label source (\texttt{y}): selectable by client (\texttt{mtbs}, \texttt{noaa}, \texttt{firms}, or \texttt{None})
+  \item Synthetic support: \texttt{synthetic\_time=True} with per-type interpolation methods
+\end{itemize}
+\end{frame}
+
+\begin{frame}{What V2 Added (1/2): API and Semantics}
+\begin{itemize}
+  \item \textbf{Label source decoupled from feature source}: client can choose \texttt{label\_source} as \texttt{mtbs}, \texttt{noaa}, \texttt{firms}, or \texttt{None}.
+  \item \textbf{Hazard-driven labeling}: \texttt{label\_hazards} + \texttt{label\_mapping} + \texttt{label\_priority} support configurable class definitions.
+  \item \textbf{FIRMS-as-label support}: wildfire label generation from detections, with optional quality filters (\texttt{firms\_type\_allowlist}, \texttt{firms\_min\_confidence}).
+  \item \textbf{Synthetic temporal controls}: \texttt{synthetic\_time}, \texttt{target\_freq}, and per-type methods (\texttt{continuous\_method}, \texttt{event\_method}, \texttt{label\_method}).
+  \item \textbf{Preserved tensor contract}: always returns \texttt{x [T,C,H,W]} and \texttt{y [T,H,W]}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{What V2 Added (2/2): Reliability and Diagnostics}
+\begin{itemize}
+  \item \textbf{Fast availability screening per source}: lightweight checks before expensive loading for FIRMS, ERA5, NOAA, MERRA2, LANDFIRE, MTBS.
+  \item \textbf{Expected warning UX}: explicit multi-line \texttt{#### Warning ###} messages instead of opaque failures.
+  \item \textbf{Graceful no-data fallback}: if no feature source is usable, returns \texttt{x} with \texttt{C=0} and aligned \texttt{y}, avoiding pipeline crash.
+  \item \textbf{Observed vs synthetic transparency}: exports \texttt{x\_synthetic\_mask (T,C)} and \texttt{y\_synthetic\_mask (T,H,W)}.
+  \item \textbf{BBox inference optimization}: skips unnecessary source loading when \texttt{bbox} is already provided.
+  \item \textbf{Demo-time performance controls}: supports CSV-only FIRMS runs to avoid huge JSON load in quick tests.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Key API}
+\begin{lstlisting}[style=pycode]
+from dataloader_v2 import load_data
+
+sample = load_data(
+    data=["FIRMS", "NOAA"],
+    date_range=("2023-01-01", "2023-01-31"),
+    bbox=(-87.8, 24.0, -79.8, 31.5),
+    synthetic_time=True,
+    target_freq="D",
+    label_source="firms",
+    label_hazards=["wildfire"],
+    label_mapping={"wildfire": 1},
+)
+\end{lstlisting}
+\vspace{0.3em}
+\textbf{Optional knobs (not shown):} \texttt{resolution}, \texttt{continuous\_method},
+\texttt{event\_method}, \texttt{label\_method}, \texttt{label\_priority},
+\texttt{firms\_type\_allowlist}, \texttt{firms\_min\_confidence}.
+\end{frame}
+
+\begin{frame}{Source-to-Output Mapping}
+\begin{itemize}
+  \item FIRMS: \texttt{x} channels (\texttt{count}, \texttt{frp}) and optionally \texttt{y} when \texttt{label\_source="firms"}
+  \item MTBS: \texttt{y} label source when \texttt{label\_source="mtbs"}
+  \item NOAA: \texttt{x} channel (\texttt{noaa\_flood}) and optionally \texttt{y} when \texttt{label\_source="noaa"}
+  \item ERA5: \texttt{x} meteorological channels (\texttt{t2m}, \texttt{d2m}, \texttt{u10}, \texttt{v10}, \texttt{sp}, \texttt{swvl1})
+  \item LANDFIRE: static \texttt{x} channel (\texttt{landfire\_fuel})
+  \item MERRA2: \texttt{x} channels if local \texttt{.nc} files are available
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Result A: No Synthetic + Missing Source (Real Run)}
+\begin{lstlisting}[style=pycode]
+python /home/yangshuang/dataloader_v2/example_no_synthetic.py
+\end{lstlisting}
+\begin{lstlisting}[style=pycode]
+#### Warning ###
+[Data Source] 'firms' is missing or has no data ...
+
+#### Warning ###
+[Feature Output] No requested feature source returned usable data ...
+
+x shape: (31, 0, 30, 32)
+y shape: (31, 30, 32)
+channels: []
+\end{lstlisting}
+\textbf{Interpretation:} expected warning, no crash, stable return contract.
+\end{frame}
+
+\begin{frame}[fragile]{Result B: Synthetic Example (Real Run)}
+\begin{lstlisting}[style=pycode]
+python /home/yangshuang/dataloader_v2/example_with_synthetic.py
+\end{lstlisting}
+\begin{lstlisting}[style=pycode]
+x shape: (2, 2, 30, 32)
+y shape: (2, 30, 32)
+channels: ['count', 'frp']
+x synthetic ratio: 0.0
+y synthetic ratio: 0.0
+\end{lstlisting}
+\textbf{Interpretation:} in this short range, all points were observed; no synthetic fill was needed.
+\end{frame}
+
+\begin{frame}[fragile]{Result C: FIRMS as Label Source (Real Run)}
+\begin{lstlisting}[style=pycode]
+firms-label x shape: (2, 2, 30, 32)
+firms-label y shape: (2, 30, 32)
+firms-label y unique: [0, 1]
+firms-label wildfire pixels: 44
+firms-label x channels: ['count', 'frp']
+\end{lstlisting}
+\textbf{Interpretation:} \texttt{label\_source="firms"} is active and produces wildfire labels.
+\end{frame}
+
+\begin{frame}{Known Constraints}
+\begin{itemize}
+  \item Full FIRMS JSON is very large; demo mode should prefer CSV-only patterns.
+  \item NOAA label quality depends on hazard filtering and class mapping.
+  \item MERRA2 path currently has no local \texttt{.nc} files in this environment.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Next Steps}
+\begin{itemize}
+  \item Add optional confidence allowlist for FIRMS string-based confidence tiers.
+  \item Provide prebuilt label presets (\texttt{wildfire\_binary}, \texttt{flood\_binary}, \texttt{multi\_hazard}).
+  \item Add compact diagnostics report per run (coverage, missing rate, synthetic ratio by channel).
+\end{itemize}
+\end{frame}
+
+\end{document}

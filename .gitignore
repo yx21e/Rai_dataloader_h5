@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+
+output/
+processed_cache/
+data/
+
+*.h5
+*.png
+*.pdf
+*.zip

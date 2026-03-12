@@ -1,0 +1,9 @@
+numpy
+pandas
+xarray
+h5py
+geopandas
+shapely
+rasterio
+matplotlib
+torch

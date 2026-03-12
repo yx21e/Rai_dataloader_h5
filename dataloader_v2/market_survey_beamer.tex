@@ -1,0 +1,138 @@
+\documentclass{beamer}
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\title{Geospatial Dataloader Market Survey\\and Comparison with Our V2}
+\author{Project Internal Review}
+\date{\today}
+
+\lstdefinestyle{code}{
+  basicstyle=\ttfamily\scriptsize,
+  frame=single,
+  breaklines=true,
+  showstringspaces=false
+}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Survey Scope}
+\textbf{Question:} How do mainstream geospatial libraries build dataloaders, and where does our \texttt{dataloader\_v2} stand?
+\vspace{0.5em}
+\begin{itemize}
+  \item Focus: map/EO data loading, alignment, sampling, label handling, synthetic time filling.
+  \item Sources: official docs and GitHub pages (TorchGeo, Raster Vision, eo-learn, stackstac/xarray, Open Data Cube, FarmVibes.AI).
+  \item Comparison target: current capabilities in our \texttt{dataloader\_v2}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{What the Market Commonly Does}
+\begin{itemize}
+  \item \textbf{Unify to a tensor/datacube contract}: usually \texttt{[time, band, y, x]} or patch-first tensors.
+  \item \textbf{Spatial-temporal query first}: \texttt{bbox/roi + time range + resolution} are the core API knobs.
+  \item \textbf{On-the-fly reprojection/resampling}: align mixed CRS/resolution during load, not by rewriting raw files.
+  \item \textbf{Patch/chip sampling}: random/grid samplers for training and inference scalability.
+  \item \textbf{Lazy/parallel I/O}: Dask/chunked reads for large rasters and cloud assets.
+  \item \textbf{Label decoupling}: features and labels can come from different products/sources.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Synthetic / Gap Filling in Practice}
+\begin{itemize}
+  \item Most libraries support \textbf{resample + interpolation} for continuous variables.
+  \item Typical methods: \texttt{nearest}, \texttt{ffill/bfill}, linear/cubic interpolation.
+  \item Event-like signals are often handled with \textbf{carry-forward} or sparse encoding, not smooth interpolation.
+  \item Good practice: expose whether values are observed vs imputed using masks/flags.
+  \item Gap-filling is usually optional and task-driven, not always-on by default.
+\end{itemize}
+\vspace{0.4em}
+\textbf{Our V2 matches this direction} with \texttt{synthetic\_time}, method controls, and synthetic masks.
+\end{frame}
+
+\begin{frame}{Representative Ecosystem Snapshot}
+\small
+\begin{tabular}{>{\raggedright\arraybackslash}p{2.2cm} >{\raggedright\arraybackslash}p{2.5cm} >{\raggedright\arraybackslash}p{2.5cm} >{\raggedright\arraybackslash}p{2.8cm}}
+\toprule
+Library & Loader Pattern & Synthetic/Resample & Typical Positioning \\
+\midrule
+TorchGeo & GeoDataset + GeoSampler (random/grid/batch) & Not a dedicated synthetic module; relies on transforms/workflows & Deep learning training pipelines on geospatial data \\
+\midrule
+Raster Vision & Config-driven pipeline + chip generation & Limited built-in interpolation focus & End-to-end CV workflow over large imagery \\
+\midrule
+eo-learn & EOPatch + task graph & Strong interpolation/resample tasks & EO time-series engineering and preprocessing \\
+\midrule
+stackstac + xarray & STAC to lazy xarray datacube & Strong resample/interp APIs & Cloud-native analysis and large-scale data fusion \\
+\midrule
+Open Data Cube & Product-indexed query + load & Resampling/grouping support, pipeline-specific gap handling & National/enterprise datacube operations \\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+\begin{frame}{Our V2: Current Strengths}
+\begin{itemize}
+  \item Unified simple API: \texttt{data/date\_range/bbox/resolution} with stable outputs \texttt{x[T,C,H,W]}, \texttt{y[T,H,W]}.
+  \item Multi-source fusion already wired (FIRMS, ERA5, NOAA, LANDFIRE, MERRA2 where available).
+  \item Label source decoupling is implemented (\texttt{mtbs/noaa/firms/None}).
+  \item Explicit synthetic controls plus observed-vs-synthetic masks in \texttt{meta}.
+  \item Fast source availability screening and user-facing warnings improve reliability.
+  \item No raw data mutation required; normalization is done at load time.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Our V2: Gaps vs Mature Platforms}
+\begin{itemize}
+  \item No generalized sampler module yet (random/grid/stratified chips as first-class objects).
+  \item Local-file first; limited cloud-native STAC/COG lazy loading compared with stackstac ecosystem.
+  \item Synthetic methods are practical but still basic vs richer temporal models.
+  \item Metadata/provenance schema can be more standardized (lineage, quality flags, per-source confidence).
+  \item Ecosystem integration is thinner (fewer plug-in adapters and benchmark-ready datasets).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Decision View: Why V2 Is Still Valuable}
+\begin{itemize}
+  \item For our current client workflow, V2 is already \textbf{deployable} and task-aligned.
+  \item It gives a clean contract for algorithms while preserving source flexibility.
+  \item It handles core operational pain points: missing data, temporal mismatch, and label configurability.
+  \item It avoids over-engineering before product requirements stabilize.
+\end{itemize}
+\vspace{0.4em}
+\textbf{Conclusion:} V2 is a strong pragmatic baseline; we should now selectively absorb market patterns.
+\end{frame}
+
+\begin{frame}{Recommended Next Iteration (V2.x)}
+\begin{itemize}
+  \item Add a first-class sampler API (\texttt{sampler="grid|random"} + patch size/stride).
+  \item Add STAC/COG reader option for lazy cloud/local unified loading.
+  \item Add preset synthetic policies by variable type (\texttt{continuous/event/label}) with defaults.
+  \item Add run diagnostics report: coverage, missing rate, synthetic ratio per channel/source.
+  \item Keep warning UX and source-decoupled labels as core differentiators.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{References (Web)}
+\footnotesize
+\begin{itemize}
+  \item TorchGeo docs (samplers): \texttt{https://torchgeo.readthedocs.io/en/latest/api/samplers.html}
+  \item TorchGeo GitHub: \texttt{https://github.com/microsoft/torchgeo}
+  \item Raster Vision: \texttt{https://rastervision.io/}
+  \item eo-learn EOTasks: \texttt{https://eo-learn.readthedocs.io/en/latest/eotasks.html}
+  \item eo-learn interpolation task docs: \texttt{https://eo-learn.readthedocs.io/en/stable/\_modules/eolearn/features/extra/interpolation.html}
+  \item stackstac docs: \texttt{https://stackstac.readthedocs.io/}
+  \item xarray time resample/interpolate: \texttt{https://docs.xarray.dev/en/v2025.06.0/user-guide/time-series.html}
+  \item Open Data Cube loading: \texttt{https://opendatacube.readthedocs.io/en/1.8.20/api/indexed-data/loading.html}
+  \item FarmVibes.AI workflows: \texttt{https://microsoft.github.io/farmvibes-ai/docfiles/markdown/WORKFLOWS.html}
+\end{itemize}
+\end{frame}
+
+\end{document}

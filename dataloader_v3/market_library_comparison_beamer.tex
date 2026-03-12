@@ -1,0 +1,118 @@
+\documentclass{beamer}
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{booktabs}
+\usepackage{array}
+
+\title{Geospatial Dataloader: Market Library Comparison}
+\author{V3 Positioning Summary}
+\date{\today}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Comparison Lens}
+\begin{itemize}
+  \item What each library is designed for
+  \item Single-source vs multi-source loading
+  \item Missing data / interpolation support
+  \item Similarities and differences vs our \texttt{dataloader\_v3}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{TorchGeo (Microsoft)}
+\textbf{Intro:} PyTorch-native geospatial datasets and samplers for model training.
+\begin{itemize}
+  \item \textbf{Loading scope:} supports many dataset classes; can be used as single-source or combined workflows.
+  \item \textbf{Missing/interpolation:} no central interpolation engine; usually handled by transforms or preprocessing.
+  \item \textbf{Similar to V3:} tensor-ready outputs, training-oriented pipeline.
+  \item \textbf{Different from V3:} stronger sampler ecosystem; V3 is simpler and more explicit for local multi-source fusion + label mapping.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Raster Vision}
+\textbf{Intro:} End-to-end CV pipeline for large raster imagery (chip-based training/inference).
+\begin{itemize}
+  \item \textbf{Loading scope:} strong for imagery pipelines; mostly task/pipeline-config driven.
+  \item \textbf{Missing/interpolation:} limited built-in temporal interpolation focus; often external preprocessing.
+  \item \textbf{Similar to V3:} practical production orientation, clear data pipeline stages.
+  \item \textbf{Different from V3:} more computer-vision pipeline heavy; V3 is lighter and directly focused on unified spatiotemporal tensors.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{eo-learn}
+\textbf{Intro:} EO time-series framework based on EOPatch and task graphs.
+\begin{itemize}
+  \item \textbf{Loading scope:} supports multi-source EO features within EOPatch structures.
+  \item \textbf{Missing/interpolation:} strong interpolation/resampling task support.
+  \item \textbf{Similar to V3:} explicit temporal harmonization and gap handling.
+  \item \textbf{Different from V3:} richer task graph abstraction; V3 is intentionally simpler API for direct loading + labeling.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{stackstac + xarray}
+\textbf{Intro:} STAC-to-datacube stack for scalable analysis (often cloud-native).
+\begin{itemize}
+  \item \textbf{Loading scope:} very strong multi-source datacube fusion through STAC assets.
+  \item \textbf{Missing/interpolation:} robust resample/interpolate APIs via xarray.
+  \item \textbf{Similar to V3:} normalized spatiotemporal tensor/data-cube mindset.
+  \item \textbf{Different from V3:} heavier infrastructure and ecosystem depth; V3 is local-first and easier to operate quickly.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Open Data Cube}
+\textbf{Intro:} Product-indexed data cube platform for large institutional EO operations.
+\begin{itemize}
+  \item \textbf{Loading scope:} strong multi-product query and loading.
+  \item \textbf{Missing/interpolation:} supports resampling/grouping; gap policies are pipeline-dependent.
+  \item \textbf{Similar to V3:} unified query contract over space and time.
+  \item \textbf{Different from V3:} enterprise-scale indexing architecture; V3 is a lightweight module for immediate algorithm ingestion.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Quick Matrix}
+\small
+\begin{tabular}{>{\raggedright\arraybackslash}p{2.2cm} >{\raggedright\arraybackslash}p{2.1cm} >{\raggedright\arraybackslash}p{2.1cm} >{\raggedright\arraybackslash}p{3.8cm}}
+\toprule
+Library & Single vs Multi & Missing/Interpolation & Position vs V3 \\
+\midrule
+TorchGeo & Both (dataset classes) & Basic/indirect & Strong DL samplers; V3 simpler for custom source fusion \\
+\midrule
+Raster Vision & Mainly imagery pipeline & Limited temporal focus & Strong CV workflow; V3 stronger in explicit temporal-label contract \\
+\midrule
+eo-learn & Multi (EOPatch tasks) & Strong & More workflow abstraction; V3 simpler runtime API \\
+\midrule
+stackstac+xarray & Strong multi-source & Strong & More scalable/cloud-native; V3 easier local deployment \\
+\midrule
+Open Data Cube & Strong multi-product & Moderate-strong & Enterprise platform; V3 is lightweight module \\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+\begin{frame}{Where V3 Stands}
+\begin{itemize}
+  \item \textbf{Strengths:} simple request object, multi-source fusion, explicit label source/hazard mapping, optional synthetic time, HDF5 export path.
+  \item \textbf{Tradeoff:} less ecosystem depth than mature platforms (samplers, cloud-native catalogs, large indexing infrastructure).
+  \item \textbf{Best fit:} fast local deployment, controlled experiments, and direct handoff to ML pipelines.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{References}
+\footnotesize
+\begin{itemize}
+  \item TorchGeo: \texttt{https://github.com/microsoft/torchgeo}
+  \item Raster Vision: \texttt{https://rastervision.io/}
+  \item eo-learn: \texttt{https://eo-learn.readthedocs.io/}
+  \item stackstac: \texttt{https://stackstac.readthedocs.io/}
+  \item xarray time-series: \texttt{https://docs.xarray.dev/}
+  \item Open Data Cube: \texttt{https://opendatacube.readthedocs.io/}
+\end{itemize}
+\end{frame}
+
+\end{document}
