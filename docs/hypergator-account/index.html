@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>FSU CS / RAI HiPerGator 账号申请指南</title>
+    <meta
+      name="description"
+      content="FSU CS / RAI HiPerGator 账号申请、federated login、SSH key、sponsor approval 和部门 umbrella allocation 指南。"
+    >
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="header-copy">
+          <p class="eyebrow">FSU CS / RAI</p>
+          <h1>HiPerGator 账号申请指南</h1>
+          <p class="lead">
+            给 FSU CS / RAI 新用户、PI 和 group manager 的 ready-to-use 版本：从 federated 申请到 sponsor 审批、SSH 登录、allocation 加组，一页完成。
+          </p>
+          <div class="action-row" aria-label="primary actions">
+            <a class="button primary" href="https://it.ufl.edu/rc/get-started/request-hipergator-account/" target="_blank" rel="noopener noreferrer">
+              打开官方申请页
+            </a>
+            <a class="button secondary" href="#ssh-key">生成 SSH key</a>
+          </div>
+          <p class="verified">最后核对日期：2026-09-02</p>
+        </div>
+        <figure class="workflow-figure">
+          <img
+            src="assets/hypergator-workflow.png"
+            alt="FSU identity, SSH public key, sponsor approval, UFRC account creation, and group allocation workflow"
+            width="1600"
+            height="820"
+          >
+        </figure>
+      </div>
+    </header>
+
+    <div class="page-shell">
+      <aside class="side-nav" aria-label="page navigation">
+        <a href="#overview">一眼看懂</a>
+        <a href="#path">申请入口</a>
+        <a href="#prepare">申请前准备</a>
+        <a href="#ssh-key">SSH public key</a>
+        <a href="#submit">提交申请</a>
+        <a href="#after">账号创建后</a>
+        <a href="#allocation">部门 allocation</a>
+        <a href="#internal-flow">内部流程</a>
+        <a href="#faq">常见问题</a>
+        <a href="#references">官方参考</a>
+      </aside>
+
+      <main>
+        <section id="overview" class="content-band">
+          <div class="section-heading">
+            <p class="eyebrow">Quick Path</p>
+            <h2>大多数 FSU 用户走 federated account 路径</h2>
+          </div>
+          <div class="flow-grid" aria-label="account request steps">
+            <article class="step-card">
+              <span class="step-number">1</span>
+              <h3>确认 sponsor/group</h3>
+              <p>先问 PI、lab manager 或 FSU CS group manager，确认应由哪个 HiPerGator sponsor 批准。</p>
+            </article>
+            <article class="step-card">
+              <span class="step-number">2</span>
+              <h3>生成 SSH key</h3>
+              <p>在本机生成 `.pub` public key 文件，后续按邮件流程上传。</p>
+            </article>
+            <article class="step-card">
+              <span class="step-number">3</span>
+              <h3>提交 federated request</h3>
+              <p>选择 Florida State University，用 FSU credential 登录并填写申请表。</p>
+            </article>
+            <article class="step-card">
+              <span class="step-number">4</span>
+              <h3>等待审批和开通</h3>
+              <p>邮箱确认、同意条款、上传 public key 后，等待 sponsor approval 和 UFRC 创建账号。</p>
+            </article>
+          </div>
+          <div class="notice">
+            已经有 HiPerGator 账号时，不要重复申请新账号。需要加 group/allocation 时，联系 allocation owner、group manager 或开 UFRC support ticket。
+          </div>
+        </section>
+
+        <section id="path" class="content-band">
+          <div class="section-heading">
+            <p class="eyebrow">Choose Entry</p>
+            <h2>该选哪一种申请入口</h2>
+          </div>
+          <div class="choice-grid">
+            <article class="choice-card recommended">
+              <h3>FSU 用户</h3>
+              <p>选择 <strong>Federated Account Request</strong>。FSU 在 UFRC federated liaison 列表中，通常可用 FSU credential 登录。</p>
+            </article>
+            <article class="choice-card">
+              <h3>已有 UF GatorLink</h3>
+              <p>选择 <strong>UF Account Request</strong>。这条路径适合已经有 UF 身份的用户。</p>
+            </article>
+            <article class="choice-card">
+              <h3>其他外部合作者</h3>
+              <p>若不能走 federated login，通常要先申请 affiliate GatorLink；官方说明提到繁忙时期可能需要最多两周。</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="prepare" class="content-band">
+          <div class="section-heading">
+            <p class="eyebrow">Before Applying</p>
+            <h2>申请前准备</h2>
+          </div>
+          <form class="checklist" aria-label="pre-application checklist">
+            <label>
+              <input type="checkbox" data-check="email">
+              <span>FSU institutional email</span>
+            </label>
+            <label>
+              <input type="checkbox" data-check="organization">
+              <span>Organization 写 `Florida State University`</span>
+            </label>
+            <label>
+              <input type="checkbox" data-check="sponsor">
+              <span>准确的 HiPerGator sponsor 或 group 名称</span>
+            </label>
+            <label>
+              <input type="checkbox" data-check="key">
+              <span>SSH public key 文件，例如 `~/.ssh/id_ed25519_hipergator.pub`</span>
+            </label>
+            <label>
+              <input type="checkbox" data-check="note">
+              <span>一句说明为什么需要 access</span>
+            </label>
+          </form>
+          <p>
+            如果不知道 sponsor/group 名称，不要猜。普通用户的账号申请需要已有 sponsor/group/resource allocation 支持；如果 sponsor 还没有 HiPerGator sponsor record、primary group 和资源，普通用户账号不会被创建。
+          </p>
+        </section>
+
+        <section id="ssh-key" class="content-band">
+          <div class="section-heading">
+            <p class="eyebrow">SSH Public Key</p>
+            <h2>生成 SSH public key</h2>
+          </div>
+          <div class="code-grid">
+            <article class="code-card">
+              <div class="code-header">
+                <h3>Linux / macOS</h3>
+                <button class="copy-button" type="button" data-copy-target="unix-key" aria-label="复制 Linux 或 macOS 命令">复制</button>
+              </div>
+              <pre><code id="unix-key">ssh-keygen -t ed25519 -C "your_fsu_email@fsu.edu" -f ~/.ssh/id_ed25519_hipergator
+cat ~/.ssh/id_ed25519_hipergator.pub</code></pre>
+            </article>
+
+            <article class="code-card">
+              <div class="code-header">
+                <h3>Windows PowerShell</h3>
+                <button class="copy-button" type="button" data-copy-target="windows-key" aria-label="复制 Windows PowerShell 命令">复制</button>
+              </div>
+              <pre><code id="windows-key">ssh-keygen -t ed25519 -C "your_fsu_email@fsu.edu" -f $env:USERPROFILE\.ssh\id_ed25519_hipergator
+type $env:USERPROFILE\.ssh\id_ed25519_hipergator.pub</code></pre>
+            </article>
+          </div>
+          <p>
+            只上传 `.pub` public key 文件。不要分享没有 `.pub` 后缀的 private key。Federated account request 流程会要求上传 public key，即使之后主要使用 Open OnDemand、JupyterHub 或 Galaxy 等网页入口。
+          </p>
+        </section>
+
+        <section id="submit" class="content-band">
+          <div class="section-heading">
+            <p class="eyebrow">Submit Request</p>
+            <h2>提交账号申请</h2>
+          </div>
+          <ol class="timeline">
+            <li>打开 UF 官方申请页：<a href="https://it.ufl.edu/rc/get-started/request-hipergator-account/" target="_blank" rel="noopener noreferrer">Request HiPerGator Account</a>。</li>
+            <li>点击 <strong>Federated Account Request</strong>。</li>
+            <li>选择 <strong>Florida State University</strong>，然后用 FSU credential 登录。</li>
+            <li>填写 Given Name、Family Name、Email、Organization、Sponsor 和 Comments。</li>
+            <li>在同一个 browser session 中完成 request form；官方文档提醒，关闭或超时后可能需要联系 UFRC support 重置。</li>
+            <li>查收邮件，点击确认链接；如果没收到，检查 spam/junk。</li>
+            <li>阅读 Terms and Conditions，选择同意。</li>
+            <li>上传准备好的 `.pub` SSH public key 文件。</li>
+          </ol>
+
+          <article class="code-card compact">
+            <div class="code-header">
+              <h3>Comments 模板</h3>
+              <button class="copy-button" type="button" data-copy-target="comment-template" aria-label="复制 comments 模板">复制</button>
+            </div>
+            <pre><code id="comment-template">I am an FSU CS / RAI researcher requesting HiPerGator access for project work under the relevant FSU CS sponsored group. Please add me to the appropriate group/allocation after sponsor approval.</code></pre>
+          </article>
+
+          <p>
+            上传 SSH public key 后，UFRC 会通知 sponsor 审批。账号不会在 sponsor 确认前创建。官方说明中，sponsor 确认后账号创建通常需要 2-3 个工作日。
+          </p>
+        </section>
+
+        <section id="after" class="content-band">
+          <div class="section-heading">
+            <p class="eyebrow">After Approval</p>
+            <h2>账号创建后</h2>
+          </div>
+          <p>先完成 HiPerGator 要求的新用户 training/onboarding，然后验证登录。</p>
+          <article class="code-card compact">
+            <div class="code-header">
+              <h3>SSH 登录</h3>
+              <button class="copy-button" type="button" data-copy-target="ssh-login" aria-label="复制 SSH 登录命令">复制</button>
+            </div>
+            <pre><code id="ssh-login">ssh -i ~/.ssh/id_ed25519_hipergator YOUR_HIPERGATOR_USERNAME@hpg.rc.ufl.edu</code></pre>
+          </article>
+          <div class="info-grid">
+            <article class="info-card">
+              <h3>Username</h3>
+              <p>Federated 用户的 HiPerGator username 可能不是 FSU email 前缀，以开通邮件为准。</p>
+            </article>
+            <article class="info-card">
+              <h3>Network</h3>
+              <p>UFRC 文档说明 federated 用户 SSH login 通常需要 SSH key；必要时先连接 eduVPN。</p>
+            </article>
+            <article class="info-card">
+              <h3>Allocation</h3>
+              <p>登录后确认默认 group、Slurm account、storage path，以及是否需要 umbrella compute allocation。</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="allocation" class="content-band">
+          <div class="section-heading">
+            <p class="eyebrow">Department Allocation</p>
+            <h2>FSU CS 部门 allocation 背景摘要</h2>
+          </div>
+          <p>
+            附件中的 2026 年 1-3 月邮件线程讨论的是 FSU CS department-level umbrella investment，用于多个 FSU CS research groups 共享，而不是某一个人的个人账号申请。
+          </p>
+          <div class="stat-grid">
+            <article class="stat-card">
+              <span>128</span>
+              <p>NCU</p>
+            </article>
+            <article class="stat-card">
+              <span>20</span>
+              <p>BSU</p>
+            </article>
+            <article class="stat-card">
+              <span>8</span>
+              <p>OSU</p>
+            </article>
+            <article class="stat-card">
+              <span>24</span>
+              <p>NGU</p>
+            </article>
+            <article class="stat-card wide">
+              <span>USD 106,300</span>
+              <p>邮件线程中的更新后总报价</p>
+            </article>
+          </div>
+          <ul class="plain-list">
+            <li>Quote/purchase 解决资源采购，不等于自动给所有用户开户。</li>
+            <li>Umbrella group 仍需要 sponsor/investor 记录；系统里必须关联真实人员，即使联系邮箱可以用 departmental/shared email。</li>
+            <li>Shared email 可作为 primary/secondary contact，但自动确认邮件可能要求从 UFRC 数据库里的邮箱回复；不能直接回复时需要到 support.rc.ufl.edu 的 ticket 里 comment。</li>
+            <li>Compute allocation 适合放入 department umbrella group。</li>
+            <li>Storage 不建议全部放入 umbrella group；更稳妥的做法通常是 compute 放 umbrella，storage 分给 individual sponsored groups。</li>
+            <li>部门应维护有资格加入 umbrella group 的 FSU sponsors/groups 列表，并明确谁负责审批新用户。</li>
+          </ul>
+        </section>
+
+        <section id="internal-flow" class="content-band">
+          <div class="section-heading">
+            <p class="eyebrow">RAI / FSU CS</p>
+            <h2>推荐内部流程</h2>
+          </div>
+          <div class="process-columns">
+            <article class="process-card">
+              <h3>新 lab member</h3>
+              <ol>
+                <li>Lab 确认用户属于哪个 PI/sponsor，以及是否需要 individual group、FSU CS umbrella allocation，或两者。</li>
+                <li>用户提交 federated HiPerGator account request，并选择正确 sponsor。</li>
+                <li>Sponsor 或指定 group manager 审批。</li>
+                <li>账号创建后，group manager 把该用户加入需要的 group/allocation。</li>
+                <li>用户验证 SSH 或 Open OnDemand 登录，再运行一个小型 Slurm smoke test。</li>
+              </ol>
+            </article>
+            <article class="process-card">
+              <h3>新 PI/group 使用 umbrella allocation</h3>
+              <ol>
+                <li>确认部门允许该 group 使用共享 allocation。</li>
+                <li>联系 umbrella group manager 或 UFRC support，把 PI/group 关联到 umbrella group。</li>
+                <li>单独决定 storage 是否留在 PI 自己的 group，而不是放进 umbrella group。</li>
+                <li>记录该 group 中谁有权审批未来用户。</li>
+              </ol>
+            </article>
+          </div>
+        </section>
+
+        <section id="faq" class="content-band">
+          <div class="section-heading">
+            <p class="eyebrow">FAQ</p>
+            <h2>常见问题</h2>
+          </div>
+          <div class="faq-list">
+            <details>
+              <summary>Sponsor 不在列表里怎么办？</summary>
+              <p>不要随便选一个 sponsor。先问 PI/group manager 确认准确名称。如果这是新 group，可能需要 sponsor 先申请 sponsor-level HiPerGator account 和资源。</p>
+            </details>
+            <details>
+              <summary>申请卡住怎么办？</summary>
+              <p>检查 spam/junk，确认 sponsor 是否已经收到并批准确认请求。仍然卡住时，开 UFRC support ticket，写清姓名、institutional email、提交日期和 sponsor/group。</p>
+            </details>
+            <details>
+              <summary>需要加入额外 allocation 怎么办？</summary>
+              <p>不要重新申请账号。让 allocation owner 或 group manager 把已有 HiPerGator username 加到对应 group。</p>
+            </details>
+          </div>
+        </section>
+
+        <section id="references" class="content-band">
+          <div class="section-heading">
+            <p class="eyebrow">Official References</p>
+            <h2>官方参考</h2>
+          </div>
+          <div class="reference-grid">
+            <a href="https://it.ufl.edu/rc/get-started/request-hipergator-account/" target="_blank" rel="noopener noreferrer">Request HiPerGator Account</a>
+            <a href="https://docs.rc.ufl.edu/access/federated_request/" target="_blank" rel="noopener noreferrer">Federated Account Request</a>
+            <a href="https://docs.rc.ufl.edu/access/federated_liaisons/" target="_blank" rel="noopener noreferrer">Federated Account Liaisons</a>
+            <a href="https://docs.rc.ufl.edu/quickstart/zero_hipergator/" target="_blank" rel="noopener noreferrer">From Zero to HiPerGator</a>
+            <a href="https://docs.rc.ufl.edu/interfaces/terminal/" target="_blank" rel="noopener noreferrer">Connecting with SSH</a>
+            <a href="https://docs.rc.ufl.edu/access/ssh_keys/" target="_blank" rel="noopener noreferrer">Using SSH Keys</a>
+            <a href="https://docs.rc.ufl.edu/resources/quote/" target="_blank" rel="noopener noreferrer">HiPerGator Quotes and Purchases</a>
+            <a href="https://support.rc.ufl.edu/" target="_blank" rel="noopener noreferrer">UFRC Support</a>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <footer class="site-footer">
+      <p>FSU CS / RAI HiPerGator guide. Official UFRC documentation takes precedence when policies change.</p>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
