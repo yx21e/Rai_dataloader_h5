@@ -211,17 +211,6 @@ x_t, y_t, meta = to_torch_batch(sample2)
 - `MTBS` as label source: load OK, synthetic alignment OK, HDF5 round-trip OK
 - `MERRA2`: adapter included, but local source files were absent during verification
 
-## Guides
-
-- Public website after GitHub Pages deploy:
-  https://yx21e.github.io/Rai_dataloader_h5/
-
-- [`docs/hypergator-account/index.html`](docs/hypergator-account/index.html)
-  FSU CS / RAI HiPerGator account request website
-
-- [`docs/hypergator_account_guide.md`](docs/hypergator_account_guide.md)
-  FSU CS / RAI HiPerGator account request Markdown guide
-
 ## Install
 
 ```bash
